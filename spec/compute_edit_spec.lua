@@ -1,6 +1,6 @@
 ---@module 'luassert'
 
-local testutils = require("spec.testutils").init()
+local _testutils = require("spec.testutils").init()
 
 local common = require("zeta.common")
 
@@ -28,7 +28,7 @@ function M.asdfas(old, offset)
     local new_lines = vim.split(old, "\n", { plain = true })
     vim.iff(old, new, {
 ]]
-        local edits = common.compute_edits(a, b, 0)
+        local edits = common.compute_line_edits(a, b, 0)
         assert.same({
             {
                 range = { 5, 6 },

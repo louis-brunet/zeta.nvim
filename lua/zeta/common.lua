@@ -140,14 +140,16 @@ function M.request_predict_completion()
     }
     client.perform_predicted_edit(body, function(res)
         local editable_range = excerpt.editable_range
-        local current_editable_lines = vim.api.nvim_buf_get_lines(bufnr, editable_range[1] - 1, editable_range[2] - 1, false)
+        local current_editable_lines =
+            vim.api.nvim_buf_get_lines(bufnr, editable_range[1] - 1, editable_range[2] - 1, false)
         -- FIX: what if file is modified right after the request..?
         -- TODO: compare lines before and after the request,
         -- if lines are modified too much that placing edits won't work,
         -- request again with new context.
         -- to enable this, request body should be ready on textchange even if
         -- previous request is still waiting
-        local edits = M.compute_edits(table.concat(current_editable_lines, "\n"), res.output_excerpt, editable_range[1] - 1)
+        local edits =
+            M.compute_line_edits(table.concat(current_editable_lines, "\n"), res.output_excerpt, editable_range[1] - 1)
         local editor = require("zeta.editor")
         editor.set_edits(bufnr, edits)
     end)
@@ -157,7 +159,7 @@ end
 ---@param new string predicted lines
 ---@param offset integer line offset from original text
 ---@return zeta.LineEdit[]
-function M.compute_edits(old, new, offset)
+function M.compute_line_edits(old, new, offset)
     ---@type zeta.LineEdit[]
     local edits = {}
     local new_lines = vim.split(new, "\n", { plain = true })
