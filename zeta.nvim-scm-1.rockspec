@@ -5,16 +5,15 @@ package = "zeta.nvim"
 version = _MODREV .. _SPECREV
 
 dependencies = {
-    "lua >= 5.1, < 5.4",
+    "lua >= 5.1",
     "nvim-nio",
     "plenary.nvim",
-    "tree-sitter-lua",
-    "tree-sitter-rust",
 }
 
 test_dependencies = {
-    "lua >= 5.1",
     "nlua",
+    "tree-sitter-lua",
+    "tree-sitter-rust",
 }
 
 source = {
