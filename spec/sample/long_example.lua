@@ -2,22 +2,9 @@
 
 local M = {}
 
----@class zeta.InputExcerpt
----@field editable_range zeta.LineRange
----@field prompt string
----@field speculated_output? string
-
----@class zeta.LineRange
----@field [1] integer start line number
----@field [2] integer end line number
-
----@class zeta.LineEdit
----@field value string[]
----@field range zeta.LineRange
-
 local _MAX_EVENT_TOKENS = 500
-local _MAX_CONTEXT_TOKENS = 150
-local _MAX_REWRITE_TOKENS = 350
+local MAX_CONTEXT_TOKENS = 150
+local MAX_REWRITE_TOKENS = 350
 local CURSOR_MARKER = "<|user_cursor_is_here|>"
 local START_OF_FILE_MARKER = "<|start_of_file|>"
 local EDITABLE_REGION_START_MARKER = "<|editable_region_start|>"
@@ -78,18 +65,16 @@ local function format_editable_lines(start, end_)
     return str
 end
 
----@param editable_token_limit integer
----@param context_token_limit integer
 ---@return zeta.InputExcerpt
-function M.excerpt_for_cursor_position(editable_token_limit, context_token_limit)
+function M.excerpt_for_cursor_position()
     local bufnr = vim.api.nvim_get_current_buf()
-    local remaining_edit_tokens = editable_token_limit
+    local remaining_edit_tokens = MAX_REWRITE_TOKENS
 
     local node = assert(vim.treesitter.get_node(), "can't get node at cursor position")
     while true do
         local node_tokens = tokens_for_bytes(node:byte_length())
-        if node_tokens <= editable_token_limit then
-            remaining_edit_tokens = editable_token_limit - node_tokens
+        if node_tokens <= MAX_REWRITE_TOKENS then
+            remaining_edit_tokens = MAX_REWRITE_TOKENS - node_tokens
             break
         end
         local parent = node:parent()
@@ -100,7 +85,7 @@ function M.excerpt_for_cursor_position(editable_token_limit, context_token_limit
     end
     local sr, _sc, er, _ec = node:range()
     local eda_lines_start, eda_lines_end = expand_lines(sr + 1, er + 1, remaining_edit_tokens)
-    local ctx_lines_start, ctx_lines_end = expand_lines(eda_lines_start, eda_lines_end, context_token_limit)
+    local ctx_lines_start, ctx_lines_end = expand_lines(eda_lines_start, eda_lines_end, MAX_CONTEXT_TOKENS)
     local path = (function()
         local full_path = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
         local cwd = vim.fs.normalize(vim.fn.getcwd())
