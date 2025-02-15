@@ -5,6 +5,9 @@ local uv = vim.uv
 
 local M = {}
 
+-- NOTE: text sync code is heavily inspired (copied) from Neovim's internal
+-- LSP textDocument/didChange implementation
+
 ---@class zeta.BufState
 ---@field debounce integer
 ---@field last_flush integer
