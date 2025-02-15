@@ -27,10 +27,6 @@ local state = {
 ---@param last_flush integer
 ---@return number
 local function next_debounce(debounce, last_flush)
-    vim.validate {
-        debounce = { debounce, "number" },
-        last_flush = { last_flush, "number" },
-    }
     if debounce == 0 then
         return 0
     end
