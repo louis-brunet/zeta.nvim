@@ -18,14 +18,14 @@ function M.show_inlinediff(bufnr, edit)
         hl_eol = true,
         virt_lines = vim.iter(edit.value)
             :map(function(line)
-                return { { line, "DiffAdd" } }
+                return { { line, "ZetaDiffAdd" } }
             end)
             :totable(),
-        line_hl_group = "DiffAdd",
+        line_hl_group = "ZetaDiffAdd",
     })
     local hl_eols_id = vim.api.nvim_buf_set_extmark(bufnr, ns, edit.range[1] - 1, 0, {
         end_row = edit.range[2] - 1,
-        line_hl_group = "DiffDelete",
+        line_hl_group = "ZetaDiffDelete",
     })
     return {
         virtlines_id,
