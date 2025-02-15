@@ -13,7 +13,7 @@ end
 ---@param bufnr integer
 ---@param edit zeta.LineEdit
 ---@return integer[] ids
-function M.show_edit_preview(bufnr, edit)
+function M.show_inlinediff(bufnr, edit)
     local virtlines_id = vim.api.nvim_buf_set_extmark(bufnr, ns, edit.range[2] - 1, 0, {
         hl_eol = true,
         virt_lines = vim.iter(edit.value)
@@ -51,7 +51,7 @@ end
 -- TODO: use nvim-nio instead of callback hell
 function M.ask_for_edit(edit, bufnr, callback)
     bufnr = bufnr or 0
-    local ids = M.show_edit_preview(bufnr, edit)
+    local ids = M.show_inlinediff(bufnr, edit)
     vim.api.nvim_win_set_cursor(0, { edit.range[1], 0 })
     vim.cmd.normal({ bang = true, args = { "zz" } })
     vim.cmd.redraw()
