@@ -21,8 +21,11 @@
 - (x) apply list of edits to editable_range (easy, just use `nvim_buf_set_lines`)
     - (x) calculate edit offsets while applying those
 - (x) ability to show predicted lines in virtual text
-- ( ) ability to send http request and parse json response
+- (-) ability to send http request and parse json response
     - `plenary.curl` can do the job... but I don't want to make curl cli a dependency
+- ( ) put extmarks (eol virttext for now) representing predicted edit position
+- ( ) add api to accept predicted edits. (this won't apply it, but show the edit)
+- ( ) test everything is working with fake server
 - ( ) move hard coded constants to config table
 - ( ) make things more stable!
 
