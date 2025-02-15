@@ -1,0 +1,33 @@
+> written in norg ahhh syntax
+
+* THINGS TO COPY FROM OTHER PROJS
+
+- (x) how to calculate context range that should be passed to LLM?
+-- by AST
+- (x) should I debounce edit events? (I think I should, then how?)
+
+* THINGS TO IMPLEMENT FOR MVP
+
+- (x) generate diff on textchange
+- (x) generate context range on textchange
+    - (x) count token from text
+    - (x) get TS token from cursor, get text of it
+    - (x) from (line,col) range to line-only range
+- (x) compute edits from oritinal lines and predicted lines
+    - `compute_edits(old, new, offset) -> Edit[]`
+        - `Edit: { value: string, range: { { int, int }, { int, int } } }`
+        - `offset` is offset from original document
+    - (x) test this
+- (x) apply list of edits to editable_range (easy, just use `nvim_buf_set_lines`)
+    - (x) calculate edit offsets while applying those
+- (x) ability to show predicted lines in virtual text
+- ( ) ability to send http request and parse json response
+    - `plenary.curl` can do the job... but I don't want to make curl cli a dependency
+- ( ) make things more stable!
+
+* ROADMAP
+
+- ( ) generate inline diff of predicted lines from original lines
+      ability to segment line-edit to multiple word edits.
+      We can still show each on virtual-line as preview.
+- ( ) ability to scroll while in confirm window
