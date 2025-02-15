@@ -2,6 +2,14 @@ local M = {}
 
 local ns = vim.api.nvim_create_namespace("zeta.nvim")
 
+---Save predicted edits to given buffer without actually applying them.
+---Executing this will set some eol virtual text and inline highlights.
+---@param bufnr integer
+---@param edits zeta.LineEdit[]
+function M.set_edits(bufnr, edits)
+    -- TODO: implement this
+end
+
 ---@param bufnr integer
 ---@param edit zeta.LineEdit
 ---@return integer[] ids

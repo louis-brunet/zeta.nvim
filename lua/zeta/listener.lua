@@ -77,6 +77,7 @@ local function handle_changes(bufnr, firstline, lastline, new_lastline, buf_stat
 
     log.debug("new lines:", table.concat(buf_state.old_lines, "\n"))
     -- TODO: implement core feature starting from here
+    -- common.request_predict_completion()
 end
 
 ---@param bufnr integer

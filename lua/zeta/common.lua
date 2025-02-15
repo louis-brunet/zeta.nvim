@@ -1,4 +1,5 @@
 -- why I named this file common.lua?
+local client = require("zeta.client")
 
 local M = {}
 
@@ -16,8 +17,8 @@ local M = {}
 ---@field range zeta.LineRange
 
 local _MAX_EVENT_TOKENS = 500
-local _MAX_CONTEXT_TOKENS = 150
-local _MAX_REWRITE_TOKENS = 350
+local MAX_CONTEXT_TOKENS = 150
+local MAX_REWRITE_TOKENS = 350
 local CURSOR_MARKER = "<|user_cursor_is_here|>"
 local START_OF_FILE_MARKER = "<|start_of_file|>"
 local EDITABLE_REGION_START_MARKER = "<|editable_region_start|>"
@@ -125,6 +126,31 @@ function M.excerpt_for_cursor_position(editable_token_limit, context_token_limit
         prompt = prompt,
         speculated_output = speculated_output,
     }
+end
+
+function M.request_predict_completion()
+    local bufnr = vim.api.nvim_get_current_buf()
+    local excerpt = M.excerpt_for_cursor_position(MAX_REWRITE_TOKENS, MAX_CONTEXT_TOKENS)
+    ---@type zeta.PredictEditRequestBody
+    local body = {
+        events = {
+            -- TODO: gather recent events
+        },
+        excerpt = excerpt.prompt,
+    }
+    client.perform_predicted_edit(body, function(res)
+        local editable_range = excerpt.editable_range
+        local current_editable_lines = vim.api.nvim_buf_get_lines(bufnr, editable_range[1] - 1, editable_range[2] - 1, false)
+        -- FIX: what if file is modified right after the request..?
+        -- TODO: compare lines before and after the request,
+        -- if lines are modified too much that placing edits won't work,
+        -- request again with new context.
+        -- to enable this, request body should be ready on textchange even if
+        -- previous request is still waiting
+        local edits = M.compute_edits(table.concat(current_editable_lines, "\n"), res.output_excerpt, editable_range[1] - 1)
+        local editor = require("zeta.editor")
+        editor.set_edits(bufnr, edits)
+    end)
 end
 
 ---@param old string original lines
