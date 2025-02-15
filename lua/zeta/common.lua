@@ -97,10 +97,8 @@ function M.excerpt_for_cursor_position()
         node = parent
     end
     local sr, _sc, er, _ec = node:range()
-    -- stylua: ignore start
     local eda_lines_start, eda_lines_end = expand_lines(sr + 1, er + 1, remaining_edit_tokens)
     local ctx_lines_start, ctx_lines_end = expand_lines(eda_lines_start, eda_lines_end, MAX_CONTEXT_TOKENS)
-    -- stylua: ignore end
     local path = (function()
         local full_path = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
         local cwd = vim.fs.normalize(vim.fn.getcwd())
@@ -141,19 +139,15 @@ function M.compute_edits(old, new, offset)
             local end_b = start_b + count_b - 1
             ---@type zeta.LineEdit
             local edit = {
-                value = vim.list_slice(
-                    new_lines,
-                    start_b,
-                    end_b
-                ),
+                value = vim.list_slice(new_lines, start_b, end_b),
                 range = {
                     offset + start_a,
                     offset + end_a,
-                }
+                },
             }
             table.insert(edits, edit)
             return 1
-        end
+        end,
     })
     return edits
 end

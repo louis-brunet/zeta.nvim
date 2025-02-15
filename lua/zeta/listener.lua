@@ -19,7 +19,7 @@ local TEXTCHANGE_DEBOUNCE = 150
 
 local state = {
     ---@type table<integer, zeta.BufState>
-    buffers = {}
+    buffers = {},
 }
 
 -- Adjust debounce time by taking time of last didChange notification into
@@ -119,7 +119,7 @@ function M.attach(bufnr)
     vim.api.nvim_buf_attach(bufnr, true, {
         on_lines = function(_, buf, _changetick, firstline, lastline, new_lastline)
             return on_lines_handler(buf, firstline, lastline, new_lastline)
-        end
+        end,
     })
 end
 

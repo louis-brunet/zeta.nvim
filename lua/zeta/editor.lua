@@ -8,12 +8,14 @@ local ns = vim.api.nvim_create_namespace("zeta.nvim")
 function M.show_edit_preview(bufnr, edit)
     local virtlines_id = vim.api.nvim_buf_set_extmark(bufnr, ns, edit.range[2] - 1, 0, {
         hl_eol = true,
-        virt_lines = vim.iter(edit.value):map(function(line)
-            return { { line, "DiffAdd" } }
-        end):totable(),
+        virt_lines = vim.iter(edit.value)
+            :map(function(line)
+                return { { line, "DiffAdd" } }
+            end)
+            :totable(),
         line_hl_group = "DiffAdd",
     })
-    local hl_eols_id = vim.api.nvim_buf_set_extmark(bufnr, ns, edit.range[1] -1, 0, {
+    local hl_eols_id = vim.api.nvim_buf_set_extmark(bufnr, ns, edit.range[1] - 1, 0, {
         end_row = edit.range[2] - 1,
         line_hl_group = "DiffDelete",
     })
@@ -43,7 +45,7 @@ function M.ask_for_edit(edit, bufnr, callback)
     bufnr = bufnr or 0
     local ids = M.show_edit_preview(bufnr, edit)
     vim.api.nvim_win_set_cursor(0, { edit.range[1], 0 })
-    vim.cmd.normal({ bang = true, args = { "zz" }})
+    vim.cmd.normal({ bang = true, args = { "zz" } })
     vim.cmd.redraw()
     -- TODO: if redraw failed, screen state must be broken
     -- check ok and do something with it.
