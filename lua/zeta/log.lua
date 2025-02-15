@@ -1,6 +1,6 @@
-local M = {}
+local config = require("zeta.config")
 
-local logger_level = vim.log.levels.DEBUG
+local M = {}
 
 local LOG_DATE_FORMAT = "%F %H:%M:%S"
 local DEFAULT_LOG_PATH = vim.fn.stdpath("log") --[[@as string]]
@@ -47,11 +47,11 @@ local function open_logfile()
 end
 
 function M.debug(...)
-    if logger_level == vim.log.levels.OFF or not open_logfile() then
+    if config._log_level == vim.log.levels.OFF or not open_logfile() then
         return false
     end
     local argc = select("#", ...)
-    if vim.log.levels.DEBUG < logger_level then
+    if vim.log.levels.DEBUG < config._log_level then
         return false
     end
     if argc == 0 then
