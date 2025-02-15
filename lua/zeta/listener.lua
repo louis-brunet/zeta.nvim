@@ -8,6 +8,8 @@ local M = {}
 -- NOTE: text sync code is heavily inspired (copied) from Neovim's internal
 -- LSP textDocument/didChange implementation
 
+local TEXTCHANGE_DEBOUNCE = 150
+
 ---@class zeta.BufState
 ---@field debounce integer
 ---@field last_flush integer
@@ -54,7 +56,12 @@ local function reset_timer(buf_state)
     end
 end
 
-local function recv_changes(bufnr, firstline, lastline, new_lastline, buf_state)
+---@param bufnr integer
+---@param firstline integer
+---@param lastline integer
+---@param new_lastline integer
+---@param buf_state zeta.BufState
+local function handle_changes(bufnr, firstline, lastline, new_lastline, buf_state)
     if not buf_state.needs_flush then
         return
     end
@@ -67,16 +74,22 @@ local function recv_changes(bufnr, firstline, lastline, new_lastline, buf_state)
         vim.list_slice(buf_state.old_lines, lastline + 1),
     }
     buf_state.old_lines = vim.iter(tbl):flatten():totable()
+
     log.debug("new lines:", table.concat(buf_state.old_lines, "\n"))
+    -- TODO: implement core feature starting from here
 end
 
-local function on_lines_handler(buf, firstline, lastline, new_lastline)
-    local buf_state = state.buffers[buf]
+---@param bufnr integer
+---@param firstline integer
+---@param lastline integer
+---@param new_lastline integer
+local function on_lines_handler(bufnr, firstline, lastline, new_lastline)
+    local buf_state = state.buffers[bufnr]
     buf_state.needs_flush = true
     reset_timer(buf_state)
     local debounce = next_debounce(buf_state.debounce, buf_state.last_flush)
     if debounce == 0 then
-        recv_changes(buf, firstline, lastline, new_lastline, buf_state)
+        handle_changes(bufnr, firstline, lastline, new_lastline, buf_state)
     else
         local timer = assert(uv.new_timer(), "Must be able to create timer")
         buf_state.timer = timer
@@ -85,18 +98,19 @@ local function on_lines_handler(buf, firstline, lastline, new_lastline)
             0,
             vim.schedule_wrap(function()
                 reset_timer(buf_state)
-                recv_changes(buf, firstline, lastline, new_lastline, buf_state)
+                handle_changes(bufnr, firstline, lastline, new_lastline, buf_state)
             end)
         )
     end
 end
 
+---@param bufnr integer
 function M.attach(bufnr)
     if state.buffers[bufnr] then
         return
     end
     state.buffers[bufnr] = {
-        debounce = 150,
+        debounce = TEXTCHANGE_DEBOUNCE,
         needs_flush = true,
         last_flush = 0,
         timer = nil,

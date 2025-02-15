@@ -23,6 +23,7 @@
 - (x) ability to show predicted lines in virtual text
 - ( ) ability to send http request and parse json response
     - `plenary.curl` can do the job... but I don't want to make curl cli a dependency
+- ( ) move hard coded constants to config table
 - ( ) make things more stable!
 
 * ROADMAP

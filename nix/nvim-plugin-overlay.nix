@@ -45,7 +45,11 @@ in {
     };
   in (final.wrapNeovimUnstable final.neovim-nightly (neovimConfig // {
     luaRcContent = /* lua */ ''
-      -- TODO: add minimal config... or do we need it?
+      vim.api.nvim_create_autocmd("FileType", {
+        callback = function(ev)
+          pcall(vim.treesitter.start, ev.buf)
+        end,
+      })
     '';
   }))
     .overrideAttrs (oa: {

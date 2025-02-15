@@ -13,6 +13,8 @@
           with ps; [
             nvim-nio
             plenary-nvim
+            tree-sitter-lua
+            tree-sitter-rust
           ];
         extraPackages = [];
 
