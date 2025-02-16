@@ -27,6 +27,8 @@
 - ( ) add api to accept predicted edits. (this won't apply it, but show the edit)
 - (x) test everything is working with fake server
 - ( ) move hard coded constants to config table
+- ( ) listen to general events like fileopen, fileclose, filerename
+- ( ) gather text change events by mode changes (send when user is back to normal mode)
 - ( ) make things more stable!
 
 * ROADMAP
@@ -39,3 +41,7 @@
 Neovim is a modal editor, and have quite different editor events than other GUI based
 editors. It will make sense if we gather Neovim-specific datas and train model for it.
 g4dn.xlarge instance in AWS cost about $400 a month (when running 24h)
+
+One example of difference between modal editor and GUI based editor is when deleting a line.
+If user deletes some text in insert mode, there is really low possibility that they are going
+to delete a line because they can just use `dd` instead.

@@ -77,7 +77,13 @@ local function handle_changes(bufnr, firstline, lastline, new_lastline, buf_stat
     buf_state.old_lines = vim.iter(tbl):flatten():totable()
 
     log.debug("new lines:", table.concat(buf_state.old_lines, "\n"))
-    -- TODO: implement core feature starting from here
+    local existing_predicted_edits = vim.b[bufnr].prediced_edits
+    if type(existing_predicted_edits) == "table" and #existing_predicted_edits > 0 then
+        if lastline ~= new_lastline then
+            log.debug("line changed, immediately invalidate previous predicted edtis")
+            require("zeta.editor").set_edits(bufnr, {})
+        end
+    end
     common.request_predict_completion()
 end
 
@@ -107,9 +113,10 @@ local function on_lines_handler(bufnr, firstline, lastline, new_lastline)
 end
 
 ---@param bufnr integer
+---@return boolean did_attached
 function M.attach(bufnr)
     if state.buffers[bufnr] then
-        return
+        return false
     end
     state.buffers[bufnr] = {
         debounce = TEXTCHANGE_DEBOUNCE,
@@ -123,6 +130,7 @@ function M.attach(bufnr)
             return on_lines_handler(buf, firstline, lastline, new_lastline)
         end,
     })
+    return true
 end
 
 return M

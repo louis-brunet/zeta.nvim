@@ -17,8 +17,10 @@ function M.setup()
             if not vim.treesitter.language.get_lang(ev.match) then
                 return
             end
+            if not listener.attach(ev.buf) then
+                return
+            end
             keymap.attach(ev.buf)
-            listener.attach(ev.buf)
             -- vim.api.nvim_create_autocmd("CursorMoved", {
             --     callback = function(_ev)
             --         -- clear previous predicted edits when cursor moved out of scope

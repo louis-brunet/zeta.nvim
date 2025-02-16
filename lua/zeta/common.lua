@@ -144,11 +144,6 @@ function M.request_predict_completion()
         excerpt = excerpt.prompt,
     }
     log.debug("body:", body)
-    if vim.b[bufnr].predicted_edits then
-        if #vim.b[bufnr].predicted_edits > 0 then
-            return
-        end
-    end
     client.perform_predicted_edit(body, vim.schedule_wrap(function(res)
         log.debug("response:", res.output_excerpt)
         local editable_range = excerpt.editable_range

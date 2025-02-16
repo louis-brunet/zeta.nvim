@@ -3,5 +3,5 @@ fn quicksort(array: &mut [T]) {
         return;
     }
     let pivot = partition(array);
-    quicksort(&mut array[pivot + 1..]);
+    quicksort(&mut array[pivot + 1..]); // press O here
 }
