@@ -15,13 +15,14 @@ function M.set_edits(bufnr, edits)
     end
     ---@type zeta.LineEdit[]
     vim.b[bufnr].predicted_edits = edits
-    local first_edit = edits[1]
     vim.api.nvim_buf_clear_namespace(bufnr, M.INDI_NS, 0, -1)
-    if first_edit then
+    if #edits > 0 then
+        local first_edit = edits[1]
         vim.api.nvim_buf_set_extmark(bufnr, M.INDI_NS, first_edit.range[1] - 1, 0, {
             virt_text = {
-                { "Predicted Edit [Press gy to accept]" },
+                { " Predicted Edit [Press gy to accept] " },
             },
+            virt_text_pos = "right_align",
         })
     end
 end
@@ -46,9 +47,11 @@ function M.show_inlinediff(bufnr, edit)
         }),
         vim.api.nvim_buf_set_extmark(bufnr, M.PREVIEW_NS, edit.range[1] - 1, 0, {
             virt_text = {
-                -- { "Apply Edit? (Y)es, [N]o, (S)kip, (Q)uit" },
-                { "Apply Edit? (Y)es, [N]o" },
+                -- TODO: make it work similar to :h :s_c
+                -- { "Apply Edit? (Y)es, (L)ast, [N]o, (Q)uit, (D)iscard" },
+                { " Apply Edit? (Y)es, [N]o " },
             },
+            virt_text_pos = "right_align",
         }),
     }
 end
