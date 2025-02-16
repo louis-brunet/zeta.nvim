@@ -140,3 +140,5 @@ function M.compute_edits(old, new, offset)
 end
 
 return M
+-- FIXME: uhhh modeline doesn't work... it's confusing to have this file while editing
+-- vim:ft=:

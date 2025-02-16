@@ -1,5 +1,6 @@
 -- YES I'M TERRIBLE ON NAMING FILES
 
+local common = require("zeta.common")
 local log = require("zeta.log")
 local uv = vim.uv
 
@@ -8,7 +9,7 @@ local M = {}
 -- NOTE: text sync code is heavily inspired (copied) from Neovim's internal
 -- LSP textDocument/didChange implementation
 
-local TEXTCHANGE_DEBOUNCE = 150
+local TEXTCHANGE_DEBOUNCE = 1000
 
 ---@class zeta.BufState
 ---@field debounce integer
@@ -77,7 +78,7 @@ local function handle_changes(bufnr, firstline, lastline, new_lastline, buf_stat
 
     log.debug("new lines:", table.concat(buf_state.old_lines, "\n"))
     -- TODO: implement core feature starting from here
-    -- common.request_predict_completion()
+    common.request_predict_completion()
 end
 
 ---@param bufnr integer

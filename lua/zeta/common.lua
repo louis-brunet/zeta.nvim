@@ -1,5 +1,6 @@
 -- why I named this file common.lua?
 local client = require("zeta.client")
+local log = require("zeta.log")
 
 local M = {}
 
@@ -86,21 +87,25 @@ function M.excerpt_for_cursor_position(editable_token_limit, context_token_limit
     local bufnr = vim.api.nvim_get_current_buf()
     local remaining_edit_tokens = editable_token_limit
 
-    local node = assert(vim.treesitter.get_node(), "can't get node at cursor position")
-    while true do
+    local node = vim.treesitter.get_node()
+    while node do
         local node_tokens = tokens_for_bytes(node:byte_length())
-        if node_tokens <= editable_token_limit then
-            remaining_edit_tokens = editable_token_limit - node_tokens
+        if node_tokens <= MAX_REWRITE_TOKENS then
+            remaining_edit_tokens = MAX_REWRITE_TOKENS - node_tokens
             break
         end
-        local parent = node:parent()
-        if not parent then
-            break
-        end
-        node = parent
+        node = node:parent()
     end
-    local sr, _sc, er, _ec = node:range()
-    local eda_lines_start, eda_lines_end = expand_lines(sr + 1, er + 1, remaining_edit_tokens)
+    ---@type integer, integer
+    local scope_start, scope_end
+    if node then
+        local sr, _sc, er, _ec = node:range()
+        scope_start, scope_end = sr + 1, er + 1
+    else
+        local pos = vim.api.nvim_win_get_cursor(0)
+        scope_start, scope_end = pos[1], pos[1]
+    end
+    local eda_lines_start, eda_lines_end = expand_lines(scope_start, scope_end, remaining_edit_tokens)
     local ctx_lines_start, ctx_lines_end = expand_lines(eda_lines_start, eda_lines_end, context_token_limit)
     local path = (function()
         local full_path = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
@@ -138,21 +143,30 @@ function M.request_predict_completion()
         },
         excerpt = excerpt.prompt,
     }
-    client.perform_predicted_edit(body, function(res)
+    log.debug("body:", body)
+    if vim.b[bufnr].predicted_edits then
+        if #vim.b[bufnr].predicted_edits > 0 then
+            return
+        end
+    end
+    client.perform_predicted_edit(body, vim.schedule_wrap(function(res)
+        log.debug("response:", res.output_excerpt)
         local editable_range = excerpt.editable_range
         local current_editable_lines =
-            vim.api.nvim_buf_get_lines(bufnr, editable_range[1] - 1, editable_range[2] - 1, false)
+            vim.api.nvim_buf_get_lines(bufnr, editable_range[1] - 1, editable_range[2], false)
         -- FIX: what if file is modified right after the request..?
         -- TODO: compare lines before and after the request,
         -- if lines are modified too much that placing edits won't work,
         -- request again with new context.
         -- to enable this, request body should be ready on textchange even if
         -- previous request is still waiting
+        local output_excerpt = res.output_excerpt:gsub(vim.pesc(CURSOR_MARKER), "")
         local edits =
-            M.compute_line_edits(table.concat(current_editable_lines, "\n"), res.output_excerpt, editable_range[1] - 1)
+            M.compute_line_edits(table.concat(current_editable_lines, "\n") .. "\n", output_excerpt, editable_range[1] - 1)
+        log.debug("edits:", edits)
         local editor = require("zeta.editor")
         editor.set_edits(bufnr, edits)
-    end)
+    end))
 end
 
 ---@param old string original lines
@@ -179,6 +193,8 @@ function M.compute_line_edits(old, new, offset)
             return 1
         end,
     })
+    -- TODO: only execute vim.diff on debug mode
+    log.debug("diff:", "\n" .. vim.diff(old, new))
     return edits
 end
 

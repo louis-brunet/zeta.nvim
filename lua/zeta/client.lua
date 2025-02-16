@@ -2,8 +2,10 @@ local curl = require("plenary.curl")
 
 local client = {}
 
+---@class zeta.EditEvent
+
 ---@class zeta.PredictEditRequestBody
----@field events any[]
+---@field events zeta.EditEvent[]
 ---@field excerpt string
 ---@field outline? string
 ---@field diagnostics? string[]
@@ -12,14 +14,14 @@ local client = {}
 ---@field request_id string
 ---@field output_excerpt string,
 
-local API_URL = ""
-local API_TOKEN = ""
+local API_URL = "localhost:7000/predict_edits/v2"
+local API_TOKEN = "testtoken"
 
 ---@param body zeta.PredictEditRequestBody
 ---@param callback fun(res: zeta.PredictEditResponse)
 function client.perform_predicted_edit(body, callback)
     curl.post(API_URL, {
-        body = body,
+        body = vim.json.encode(body),
         headers = {
             ["Content-Type"] = "application/json",
             ["Authorization"] = "Bearer " .. API_TOKEN,

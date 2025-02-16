@@ -1,5 +1,6 @@
 local keymap = require("zeta.keymap")
 local listener = require("zeta.listener")
+local log = require("zeta.log")
 
 local M = {}
 
@@ -23,6 +24,7 @@ function M.setup()
             --         -- clear previous predicted edits when cursor moved out of scope
             --     end
             -- })
+            log.debug("attached to buffer", ev.buf)
             vim.notify("zeta attached")
         end,
     })

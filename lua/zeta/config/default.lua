@@ -6,7 +6,7 @@
 local default_config = {
     ---@see vim.log.levels
     ---@type integer log level
-    _log_level = vim.log.levels.WARN,
+    _log_level = vim.log.levels.DEBUG,
 }
 ---@comment default-config:end
 
