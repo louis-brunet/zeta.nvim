@@ -1,6 +1,7 @@
 local keymap = require("zeta.keymap")
 local listener = require("zeta.listener")
 local log = require("zeta.log")
+local common = require("zeta.common")
 
 local M = {}
 
@@ -20,6 +21,7 @@ function M.setup()
             if not listener.attach(ev.buf) then
                 return
             end
+            -- M.attach(ev.buf)
             keymap.attach(ev.buf)
             -- vim.api.nvim_create_autocmd("CursorMoved", {
             --     callback = function(_ev)
@@ -31,5 +33,29 @@ function M.setup()
         end,
     })
 end
+
+-- function M.attach(bufnr)
+--     vim.api.nvim_clear_autocmds({
+--         group = augroup,
+--         buffer = bufnr,
+--     })
+--     local function handle(_ev)
+--         -- TODO: request prediction here
+--         common.request_predict_completion()
+--     end
+--     vim.api.nvim_create_autocmd("TextChanged", {
+--         group = augroup,
+--         buffer = bufnr,
+--         -- TODO: debounce request for TextChanged events
+--         callback = handle,
+--     })
+--     -- TODO: set TextChange event on every textchanged event inside insert mode
+--     -- vim.api.nvim_create_autocmd("ModeChange", {
+--     --     group = augroup,
+--     --     buffer = bufnr,
+--     --     pattern = "*:n",
+--     --     callback = handle,
+--     -- })
+-- end
 
 return M

@@ -21,14 +21,33 @@
 - (x) apply list of edits to editable_range (easy, just use `nvim_buf_set_lines`)
     - (x) calculate edit offsets while applying those
 - (x) ability to show predicted lines in virtual text
-- (-) ability to send http request and parse json response
-    - `plenary.curl` can do the job... but I don't want to make curl cli a dependency
-- ( ) put extmarks (eol virttext for now) representing predicted edit position
-- ( ) add api to accept predicted edits. (this won't apply it, but show the edit)
+- (x) ability to send http request and parse json response
+- (x) put extmarks (eol virttext for now) representing predicted edit position
+- (x) add api to accept predicted edits. (this won't apply it, but show the edit)
 - (x) test everything is working with fake server
-- ( ) move hard coded constants to config table
+
+- ( ) block additional predictions on accepting previous predictions.
+      make "accepting mode" flag and check it before running request_edit_predictions
+      to make "accepting mode" a thing, each prediction should be group of edits
+    - ( ) use `zeta.Prediction` class.
+      `vim.b.edit_prediction` will be `zeta.Prediction?` type
+        - ( ) `request_predict_completion` will be called from textchange/modechange
+          events. these are tracked from direct autocmds and not buffer attached process.
+          As we have modechange event, textchange inside insert mode can be ignored by
+          default.
+          `request_predict_completion` will receive recent events from `state` and
+          generated prompts from `prompt`
+          It will create a request body and pass it to client.
+        - ( ) `api.accept` will be called from normal mode, move cursor to first edit,
+          start chain of confirmations. After confirmations, no matter if user had
+          skipped ("No") some edits, prediction will be cleared out from buffer.
+
 - ( ) listen to general events like fileopen, fileclose, filerename
-- ( ) gather text change events by mode changes (send when user is back to normal mode)
+- (_) gather text change events by mode changes (send when user is back to normal mode)
+- (x) refactor event listener
+    - (x) make sure debouncing won't loose some events
+    - (x) reduce the event count
+- ( ) move hard coded constants to config table
 - ( ) make things more stable!
 
 * ROADMAP
