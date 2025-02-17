@@ -43,6 +43,8 @@
           skipped ("No") some edits, prediction will be cleared out from buffer.
 
 - ( ) listen to general events like fileopen, fileclose, filerename
+    - ( ) mock `vim.lsp.util.rename()` to listen to `filerename` events.
+      let user to do the mocking from config
 - (_) gather text change events by mode changes (send when user is back to normal mode)
 - (x) refactor event listener
     - (x) make sure debouncing won't loose some events
