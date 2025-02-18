@@ -135,7 +135,9 @@ function M.prompt_for_events(events)
     return vim.iter(events)
         :rev()
         :map(editevent_to_diff)
-        :filter(function(s) return s ~= "" end)
+        :filter(function(s)
+            return s ~= ""
+        end)
         :join("\n")
 end
 

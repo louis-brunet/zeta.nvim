@@ -11,13 +11,6 @@ local M = {}
 
 local TEXTCHANGE_DEBOUNCE = 200
 
----@class zeta.BufState
----@field debounce integer
----@field last_flush integer
----@field needs_flush boolean
----@field timer? uv.uv_timer_t
----@field old_lines string[]
-
 ---@class zeta.EditorEvent
 
 ---@class zeta.event.LineEditEvent: zeta.LineEdit
@@ -73,7 +66,7 @@ local function merge_line_edits(a, b)
     local a_hunk_height = anl - ans + aol - aos
     -- NOTE: Don't merge when hunk height is too long.
     -- Long hunk might exceed the token limit
-    if (a_hunk_height >= MAX_HUNK_HEIGHT) then
+    if a_hunk_height >= MAX_HUNK_HEIGHT then
         return
     end
     local mergeable = anl >= bos and bol >= ans
@@ -85,7 +78,9 @@ local function merge_line_edits(a, b)
         vim.list_slice(a.value, 1, bos - ans),
         b.value,
         vim.list_slice(a.value, bol - (ans - 1)),
-    }):flatten():totable()
+    })
+        :flatten()
+        :totable()
     ---@type zeta.LineRange
     local range = {
         aos - math.max(ans - bos, 0),
@@ -114,7 +109,9 @@ local function handle_changes(bufnr, firstline, lastline, new_lastline, buf_stat
         vim.list_slice(buf_state.old_lines, 1, firstline),
         vim.api.nvim_buf_get_lines(bufnr, firstline, new_lastline, false),
         vim.list_slice(buf_state.old_lines, lastline + 1),
-    }):flatten():totable()
+    })
+        :flatten()
+        :totable()
     log.debug("buf.old_lines", buf_state.old_lines)
     ---@type zeta.event.LineEditEvent
     local edit = {
@@ -159,13 +156,7 @@ local function handle_changes(bufnr, firstline, lastline, new_lastline, buf_stat
     log.debug("user edited a file")
     -- log.debug("diff:", vim.diff(table.concat(old_lines), table.concat(new_lines), { ctxlen = 3 }))
     buf_state.old_lines = new_lines
-    local existing_predicted_edits = vim.b[bufnr].prediced_edits
-    if type(existing_predicted_edits) == "table" and #existing_predicted_edits > 0 then
-        if lastline ~= new_lastline then
-            log.debug("line changed, immediately invalidate previous predicted edtis")
-            require("zeta.editor").set_edits(bufnr, {})
-        end
-    end
+    require("zeta.common").request_predict_completion()
 end
 
 ---@param bufnr integer
@@ -173,13 +164,16 @@ end
 ---@param lastline integer
 ---@param new_lastline integer
 local function on_lines_handler(bufnr, firstline, lastline, new_lastline)
+    log.debug("on_lines_handler")
+    if state.buffers[bufnr].prediction then
+        log.debug("text changed. immediately invalidate previous predicted edtis")
+        require("zeta.editor").clear_prediction(bufnr)
+    end
     local buf_state = state.buffers[bufnr]
     buf_state.needs_flush = true
     reset_timer(buf_state)
     local debounce = next_debounce(buf_state.debounce, buf_state.last_flush)
-    if debounce == 0
-        or lastline ~= new_lastline
-        then
+    if debounce == 0 or lastline ~= new_lastline then
         handle_changes(bufnr, firstline, lastline, new_lastline, buf_state)
     else
         local timer = assert(uv.new_timer(), "Must be able to create timer")
@@ -211,6 +205,12 @@ function M.attach(bufnr)
     vim.api.nvim_buf_attach(bufnr, true, {
         on_lines = function(_, buf, _changetick, firstline, lastline, new_lastline)
             return on_lines_handler(buf, firstline, lastline, new_lastline)
+        end,
+        on_detach = function()
+            log.debug("detach")
+        end,
+        on_reload = function()
+            log.debug("reload")
         end,
     })
     return true

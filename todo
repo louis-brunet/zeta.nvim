@@ -26,21 +26,21 @@
 - (x) add api to accept predicted edits. (this won't apply it, but show the edit)
 - (x) test everything is working with fake server
 
-- ( ) block additional predictions on accepting previous predictions.
+- (_) block additional predictions on accepting previous predictions.
       make "accepting mode" flag and check it before running request_edit_predictions
       to make "accepting mode" a thing, each prediction should be group of edits
-    - ( ) use `zeta.Prediction` class.
-      `vim.b.edit_prediction` will be `zeta.Prediction?` type
-        - ( ) `request_predict_completion` will be called from textchange/modechange
-          events. these are tracked from direct autocmds and not buffer attached process.
-          As we have modechange event, textchange inside insert mode can be ignored by
-          default.
-          `request_predict_completion` will receive recent events from `state` and
-          generated prompts from `prompt`
-          It will create a request body and pass it to client.
-        - ( ) `api.accept` will be called from normal mode, move cursor to first edit,
-          start chain of confirmations. After confirmations, no matter if user had
-          skipped ("No") some edits, prediction will be cleared out from buffer.
+- (x) use `zeta.Prediction` class.
+    `vim.b.edit_prediction` will be `zeta.Prediction?` type
+    - (x) `request_predict_completion` will be called from textchange/modechange
+        events. these are tracked from direct autocmds and not buffer attached process.
+        As we have modechange event, textchange inside insert mode can be ignored by
+        default.
+        `request_predict_completion` will receive recent events from `state` and
+        generated prompts from `prompt`
+        It will create a request body and pass it to client.
+    - (x) `api.accept` will be called from normal mode, move cursor to first edit,
+        start chain of confirmations. After confirmations, no matter if user had
+        skipped ("No") some edits, prediction will be cleared out from buffer.
 
 - ( ) listen to general events like fileopen, fileclose, filerename
     - ( ) mock `vim.lsp.util.rename()` to listen to `filerename` events.
@@ -54,6 +54,7 @@
 
 * ROADMAP
 
+- ( ) [sense.nvim] as a dependency
 - ( ) generate inline diff of predicted lines from original lines
       ability to segment line-edit to multiple word edits.
       We can still show each on virtual-line as preview.

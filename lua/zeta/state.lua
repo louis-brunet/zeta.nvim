@@ -2,6 +2,14 @@ local state = {}
 
 local MAX_EVENT_COUNT = 10
 
+---@class zeta.BufState
+---@field debounce integer
+---@field last_flush integer
+---@field needs_flush boolean
+---@field timer? uv.uv_timer_t
+---@field old_lines string[]
+---@field prediction? zeta.Prediction
+
 ---@type table<integer, zeta.BufState>
 state.buffers = {}
 ---@type zeta.event.LineEditEvent[]

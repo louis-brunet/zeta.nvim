@@ -1,4 +1,5 @@
 -- why I named this file common.lua?
+local prompt = require("zeta.prompt")
 local client = require("zeta.client")
 local log = require("zeta.log")
 
@@ -23,11 +24,8 @@ local CURSOR_MARKER = "<|user_cursor_is_here|>"
 
 function M.request_predict_completion()
     log.debug("request predict completion")
-    if true then
-        return
-    end
     local bufnr = vim.api.nvim_get_current_buf()
-    local excerpt = M.excerpt_for_cursor_position(MAX_REWRITE_TOKENS, MAX_CONTEXT_TOKENS)
+    local excerpt = prompt.excerpt_for_cursor_position(MAX_REWRITE_TOKENS, MAX_CONTEXT_TOKENS)
     ---@type zeta.PredictEditRequestBody
     local body = {
         events = {
@@ -57,7 +55,11 @@ function M.request_predict_completion()
             )
             log.debug("edits:", edits)
             local editor = require("zeta.editor")
-            editor.set_edits(bufnr, edits)
+            -- editor.set_edits(bufnr, edits)
+            editor.set_prediction(bufnr, {
+                request_id = "",
+                edits = edits,
+            })
         end)
     )
 end
