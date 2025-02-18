@@ -11,3 +11,6 @@ fn quicksort(array: &mut [T]) {
 //
 //
 // quick
+// quick
+// quick
+// quick

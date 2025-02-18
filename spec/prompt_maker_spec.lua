@@ -6,13 +6,13 @@ local common = require("zeta.common")
 
 describe("Create excerpt from cursor position", function()
     it("case: long_example.lua", function()
-        vim.cmd.edit("spec/sample/long_example.lua")
+        vim.cmd.edit("spec/samples/long_example.lua")
         vim.api.nvim_win_set_cursor(0, { 35, 23 })
         local excerpt = common.excerpt_for_cursor_position(50, 32)
         assert.same({
             editable_range = { 33, 36 },
             prompt = [=[
-```spec/sample/long_example.lua
+```spec/samples/long_example.lua
         if remaining_tokens > 0 and start > 1 then
             start = start - 1
 <|editable_region_start|>
