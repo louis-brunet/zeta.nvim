@@ -8,6 +8,7 @@ dependencies = {
     "lua >= 5.1",
     "nvim-nio",
     "plenary.nvim",
+    "sense.nvim",
 }
 
 test_dependencies = {
