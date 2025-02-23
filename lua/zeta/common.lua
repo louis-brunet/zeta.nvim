@@ -2,6 +2,7 @@
 local prompt = require("zeta.prompt")
 local client = require("zeta.client")
 local log = require("zeta.log")
+local state = require("zeta.state")
 
 local M = {}
 
@@ -25,15 +26,17 @@ local CURSOR_MARKER = "<|user_cursor_is_here|>"
 function M.request_predict_completion()
     log.debug("request predict completion")
     local bufnr = vim.api.nvim_get_current_buf()
+    -- TODO: peek all recent events instead
+    local events = { state:pop_event() }
+    local input_events = prompt.prompt_for_events(events)
     local excerpt = prompt.excerpt_for_cursor_position(MAX_REWRITE_TOKENS, MAX_CONTEXT_TOKENS)
     ---@type zeta.PredictEditRequestBody
     local body = {
-        events = {
-            -- TODO: gather recent events
-        },
-        excerpt = excerpt.prompt,
+        input_events = input_events,
+        input_excerpt = excerpt.prompt,
     }
-    -- log.debug("body:", body)
+    log.debug("request body.input_events:", body.input_events)
+    log.debug("request body.input_excerpt:", body.input_excerpt)
     client.perform_predicted_edit(
         body,
         vim.schedule_wrap(function(res)

@@ -3,8 +3,10 @@ local curl = require("plenary.curl")
 local client = {}
 
 ---@class zeta.PredictEditRequestBody
----@field events zeta.EditorEvent[]
----@field excerpt string
+---editor events
+---@field input_events string
+---excerpt for cursor position
+---@field input_excerpt string
 ---@field outline? string
 ---@field diagnostics? string[]
 
