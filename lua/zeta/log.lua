@@ -6,12 +6,6 @@ local LARGE = 1e9
 
 local LOG_LEVEL = vim.log.levels.DEBUG
 
----Get the zeta.nvim log file path.
----@return string filepath
-local function get_logfile()
-    return vim.fs.joinpath(DEFAULT_LOG_PATH, "zeta-nvim.log")
-end
-
 local logfile, openerr
 ---@private
 ---Opens log file. Returns true if file is open, false on error
@@ -26,7 +20,7 @@ local function open_logfile()
     end
 
     vim.fn.mkdir(DEFAULT_LOG_PATH, "-p")
-    logfile, openerr = io.open(get_logfile(), "w+")
+    logfile, openerr = io.open(M.get_logfile(), "w+")
     if not logfile then
         local err_msg = string.format("Failed to open zeta.nvim log file: %s", openerr)
         vim.notify(err_msg, vim.log.levels.ERROR, { title = "zeta.nvim" })
@@ -34,10 +28,10 @@ local function open_logfile()
     end
 
     ---@diagnostic disable-next-line: undefined-field
-    local log_info = vim.uv.fs_stat(get_logfile())
+    local log_info = vim.uv.fs_stat(M.get_logfile())
     if log_info and log_info.size > LARGE then
         local warn_msg =
-            string.format("zeta.nvim log is large (%d MB): %s", log_info.size / (1000 * 1000), get_logfile())
+            string.format("zeta.nvim log is large (%d MB): %s", log_info.size / (1000 * 1000), M.get_logfile())
         vim.notify(warn_msg, vim.log.levels.WARN, { title = "zeta.nvim" })
     end
 
@@ -45,6 +39,13 @@ local function open_logfile()
     logfile:write(string.format("[START][%s] zeta.nvim logging initiated\n", os.date(LOG_DATE_FORMAT)))
     return true
 end
+
+---Get the zeta.nvim log file path.
+---@return string filepath
+function M.get_logfile()
+    return vim.fs.joinpath(DEFAULT_LOG_PATH, "zeta-nvim.log")
+end
+
 
 function M.debug(...)
     if LOG_LEVEL == vim.log.levels.OFF or not open_logfile() then
