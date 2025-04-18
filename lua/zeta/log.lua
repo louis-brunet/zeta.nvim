@@ -75,4 +75,13 @@ function M.debug(...)
     logfile:flush()
 end
 
+---@param message string log message
+---@param level? integer|nil log level, see vim.log.levels
+function M.notify(message, level)
+    if level == nil then
+        level = vim.log.levels.INFO
+    end
+    vim.notify(message, level, { title = "zeta.nvim" })
+end
+
 return M

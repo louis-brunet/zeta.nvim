@@ -1,7 +1,6 @@
 local keymap = require("zeta.keymap")
 local listener = require("zeta.listener")
 local log = require("zeta.log")
-local common = require("zeta.common")
 
 local M = {}
 
@@ -29,7 +28,7 @@ function M.setup()
             --     end
             -- })
             log.debug("attached to buffer", ev.buf)
-            vim.notify("zeta attached")
+            log.notify("zeta attached to " .. ev.file)
         end,
     })
 end

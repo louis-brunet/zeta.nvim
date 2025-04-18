@@ -39,6 +39,7 @@ function M.request_predict_completion()
     log.debug("request body.input_excerpt:", body.input_excerpt)
     client.perform_predicted_edit(
         body,
+        ---@param res zeta.PredictEditResponse
         vim.schedule_wrap(function(res)
             log.debug("response:", res.output_excerpt)
             local editable_range = excerpt.editable_range
@@ -50,7 +51,19 @@ function M.request_predict_completion()
             -- request again with new context.
             -- to enable this, request body should be ready on textchange even if
             -- previous request is still waiting
-            local output_excerpt = res.output_excerpt:gsub(vim.pesc(CURSOR_MARKER), "")
+
+            -- TODO: refactor constants with those from ./prompt.lua
+            local EDITABLE_REGION_START_MARKER = "<|editable_region_start|>"
+            local EDITABLE_REGION_END_MARKER = "<|editable_region_end|>"
+            -- local special_token_pattern = ("%s|%s|%s"):format(
+            --     vim.pesc(EDITABLE_REGION_START_MARKER),
+            --     vim.pesc(EDITABLE_REGION_END_MARKER),
+            --     vim.pesc(CURSOR_MARKER)
+            -- )
+            local output_excerpt = res.output_excerpt
+                :gsub(vim.pesc(CURSOR_MARKER), "")
+                :gsub("^.*"..vim.pesc(EDITABLE_REGION_START_MARKER) .. "\n", "")
+                :gsub(vim.pesc(EDITABLE_REGION_END_MARKER) .. "\n" .. ".*$", "")
             local edits = M.compute_line_edits(
                 table.concat(current_editable_lines, "\n") .. "\n",
                 output_excerpt,
@@ -60,7 +73,7 @@ function M.request_predict_completion()
             local editor = require("zeta.editor")
             -- editor.set_edits(bufnr, edits)
             editor.set_prediction(bufnr, {
-                request_id = "",
+                request_id = res.request_id,
                 edits = edits,
             })
         end)
@@ -88,6 +101,7 @@ function M.compute_line_edits(old, new, offset)
                 },
             }
             table.insert(edits, edit)
+            log.debug("diff edit found:", "\n" .. vim.inspect(edit))
             return 1
         end,
     })

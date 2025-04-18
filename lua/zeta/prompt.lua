@@ -93,7 +93,8 @@ function M.excerpt_for_cursor_position(editable_token_limit, context_token_limit
         scope_start, scope_end = pos[1], pos[1]
     end
     local eda_lines_start, eda_lines_end = expand_lines(scope_start, scope_end, remaining_edit_tokens)
-    local ctx_lines_start, ctx_lines_end = expand_lines(eda_lines_start, eda_lines_end, context_token_limit)
+    local ctx_lines_start, ctx_lines_end = expand_lines(eda_lines_start, eda_lines_end,
+        context_token_limit)
     local path = utils.get_buf_rel_path(bufnr)
     local prompt = "```" .. path .. "\n"
     if ctx_lines_start == 1 then
@@ -126,15 +127,32 @@ local function editevent_to_diff(ev)
     return vim.diff(old_text, new_text, { ctxlen = 3 }) --[[@as string]]
 end
 
+---Generate prompt for one event
+---Source for the format: https://huggingface.co/datasets/zed-industries/zeta
+---
+---@param ev zeta.event.LineEditEvent
+---@return string prompt text
+local function editevent_to_prompt(ev)
+    -- TODO: check prompt length ?
+
+    -- return "User edited file " .. ev.path .. "\n\n```diff\n" .. editevent_to_diff(ev) .. "\n```"
+    return ([[User edited file "%s"
+
+```diff
+%s
+```]]
+    ):format(ev.path, editevent_to_diff(ev))
+end
+
 ---Generate prompt from recent events
 ---@param events zeta.event.LineEditEvent[]
 ---@return string
 function M.prompt_for_events(events)
-    -- TODO: convert event to prompts
-    -- e.g. for textchange event, generate diff from given strings
+    -- TODO: convert different event types to prompts
+    -- e.g. file open events: https://huggingface.co/datasets/zed-industries/zeta/viewer?sql=SELECT+*+FROM+train+WHERE+events+ILIKE+%27%25opened%25%27+LIMIT+10%3B&views%5B%5D=train
     return vim.iter(events)
         :rev()
-        :map(editevent_to_diff)
+        :map(editevent_to_prompt)
         :filter(function(s)
             return s ~= ""
         end)
@@ -146,6 +164,33 @@ end
 ---@return string
 function M.prompt_for_outline(bufnr)
     return "TODO"
+end
+
+---Build the prompt in the format expected by the zeta model
+---@param predict_edit_request zeta.PredictEditRequestBody
+---@return string prompt
+function M.predict_edit_prompt(predict_edit_request)
+    ---source for the prompt format:
+    ---[prediction-prompt.md](https://huggingface.co/datasets/zed-industries/zeta/blob/61a4b710a2de3b9943be3bf095d956f97363a352/script/prediction-prompt.md)
+    local prompt = ([[### Instruction:
+You are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.
+
+### User Edits:
+
+%s
+
+### User Excerpt:
+
+%s
+
+### Response:
+]]):format(
+    -- (#predict_edit_request.input_events ~= 0) and (predict_edit_request.input_events .. '\n') or
+    -- '',
+        predict_edit_request.input_events,
+        predict_edit_request.input_excerpt
+    )
+    return prompt
 end
 
 return M
