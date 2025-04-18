@@ -4,41 +4,42 @@ Neovim's implementation of [Zed]'s [edit prediction] feature.
 
 ## Installation
 
-- With [rocks.nvim](https://github.com/nvim-neorocks/rocks.nvim)
+### rocks.nvim
 
     ```
     :Rocks install zeta.nvim
     ```
 
-- With [lazy.nvim](https://github.com/folke/lazy.nvim)
+### lazy.nvim
 
-    ```lua
-    ---@type LazySpec
-    return {
-        'boltlessengineer/zeta.nvim',
+```lua
+---@type LazySpec
+return {
+    'boltlessengineer/zeta.nvim',
 
-        ---@type zeta.Opts
-        opts = {}
+    -- TODO: add dependencies
+    dependencies = {},
 
-        config = function(_self, opts)
-            local zeta = require("zeta")
-            local zeta_autocmd = require("zeta.autocmd")
-            local zeta_api = require("zeta.api")
+    ---@type zeta.Opts
+    opts = {},
 
-            zeta.setup(opts)
-            -- zeta_autocmd.setup()
+    -- config = function(_self, opts)
+    --     local zeta = require("zeta")
+    --     local zeta_autocmd = require("zeta.autocmd")
+    --     local zeta_api = require("zeta.api")
+    --
+    --     zeta.setup(opts)
+    --     zeta_autocmd.setup()
+    --
+    --     vim.keymap.set("n",
+    --         "gy",
+    --         zeta_api.accept,
+    --         { desc = "zeta: accept" }
+    --     )
+    -- end,
+}
 
-            -- vim.keymap.set("n",
-            --     "gy",
-            --     zeta_api.accept,
-            --     {
-            --         desc = "zeta: accept"
-            --     }
-            -- )
-        end
-    }
-
-    ```
+```
 
 ## Usage
 
