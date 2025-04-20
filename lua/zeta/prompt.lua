@@ -118,22 +118,23 @@ function M.excerpt_for_cursor_position(editable_token_limit, context_token_limit
 end
 
 
----@param lines string
+---@param lines string[]
 ---@return string
-local function add_newline_if_not_empty(lines)
+local function concat_lines(lines)
+    local suffix = ""
     if #lines ~= 0 then
-        return lines .. "\n"
+        suffix = "\n"
     end
-    return lines
+    return table.concat(lines, "\n") .. suffix
 end
 
 ---@param ev zeta.event.LineEditEvent
 ---@return string diff text
 local function editevent_to_diff(ev)
-    local a_ctx = add_newline_if_not_empty(table.concat(ev.a_ctx_lines, "\n"))
-    local b_ctx = add_newline_if_not_empty(table.concat(ev.b_ctx_lines, "\n"))
-    local old_text = a_ctx .. add_newline_if_not_empty(table.concat(ev.old_lines, "\n"))  .. b_ctx
-    local new_text = a_ctx .. add_newline_if_not_empty(table.concat(ev.value, "\n"))  .. b_ctx
+    local a_ctx = concat_lines(ev.a_ctx_lines)
+    local b_ctx = concat_lines(ev.b_ctx_lines)
+    local old_text = a_ctx .. concat_lines(ev.old_lines) .. b_ctx
+    local new_text = a_ctx .. concat_lines(ev.value) .. b_ctx
     return vim.diff(old_text, new_text, { ctxlen = 3 }) --[[@as string]]
 end
 
