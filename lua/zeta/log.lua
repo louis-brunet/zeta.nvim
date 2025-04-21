@@ -30,8 +30,11 @@ local function open_logfile()
     ---@diagnostic disable-next-line: undefined-field
     local log_info = vim.uv.fs_stat(M.get_logfile())
     if log_info and log_info.size > LARGE then
-        local warn_msg =
-            string.format("zeta.nvim log is large (%d MB): %s", log_info.size / (1000 * 1000), M.get_logfile())
+        local warn_msg = string.format(
+            "zeta.nvim log is large (%d MB): %s",
+            log_info.size / (1000 * 1000),
+            M.get_logfile()
+        )
         vim.notify(warn_msg, vim.log.levels.WARN, { title = "zeta.nvim" })
     end
 
@@ -46,7 +49,14 @@ function M.get_logfile()
     return vim.fs.joinpath(DEFAULT_LOG_PATH, "zeta-nvim.log")
 end
 
-
+---Log to the log file with log level DEBUG.
+---For string arguments, logs the string.
+---For function arguments, logs the return value. The function is only called if
+---the log level is high enough.
+---For other argument types, logs the result of vim.inspect() for the argument.
+---
+---@param ... unknown message
+---@return boolean logged
 function M.debug(...)
     if LOG_LEVEL == vim.log.levels.OFF or not open_logfile() then
         return false
@@ -67,12 +77,17 @@ function M.debug(...)
             table.insert(parts, "<nil>")
         elseif type(arg) == "string" then
             table.insert(parts, arg)
+        elseif type(arg) == "function" then
+            local returned = arg()
+            local returned_str = type(returned) == "string" and returned or vim.inspect(returned)
+            table.insert(parts, returned_str)
         else
             table.insert(parts, vim.inspect(arg))
         end
     end
     logfile:write(table.concat(parts, " "), "\n")
     logfile:flush()
+    return true
 end
 
 ---@param message string log message

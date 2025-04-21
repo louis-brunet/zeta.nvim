@@ -7,8 +7,8 @@ local state = require("zeta.state")
 local M = {}
 
 ---@class zeta.LineRange
----@field [1] integer start line number
----@field [2] integer end line number
+---@field [1] integer start line number (1-indexed, inclusive)
+---@field [2] integer end line number (1-indexed, inclusive)
 
 ---@class zeta.LineEdit
 ---@field value string[]
@@ -89,15 +89,24 @@ function M.compute_line_edits(old, new, offset)
     local edits = {}
     local new_lines = vim.split(new, "\n", { plain = true })
     vim.diff(old, new, {
-        on_hunk = function(start_a, count_a, start_b, count_b)
-            local end_a = start_a + count_a - 1
-            local end_b = start_b + count_b - 1
+        on_hunk = function(start_old, count_old, start_new, count_new)
+            -- increment the empty side's start line for add-only diffs
+            if count_old == 0 then
+                start_old = start_old + 1
+            end
+            -- increment the empty side's start line for delete-only diffs
+            if count_new == 0 then
+                start_new = start_new + 1
+            end
+
+            local end_old = start_old + count_old - 1
+            local end_new = start_new + count_new - 1
             ---@type zeta.LineEdit
             local edit = {
-                value = vim.list_slice(new_lines, start_b, end_b),
+                value = vim.list_slice(new_lines, start_new, end_new),
                 range = {
-                    offset + start_a,
-                    offset + end_a,
+                    offset + start_old,
+                    offset + end_old,
                 },
             }
             table.insert(edits, edit)
@@ -105,8 +114,7 @@ function M.compute_line_edits(old, new, offset)
             return 1
         end,
     })
-    -- TODO: only execute vim.diff on debug mode
-    log.debug("diff:", "\n" .. vim.diff(old, new))
+    log.debug("diff:", function() return "\n" .. vim.diff(old, new) end)
     return edits
 end
 
