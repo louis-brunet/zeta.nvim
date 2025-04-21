@@ -18,7 +18,7 @@ local openai_adapter = {
     ---
     ---@param request zeta.PredictEditRequestBody
     adapt_predict_edit_request = function(request)
-        -- TODO: how many max tokens? (probably higher than the current 256?)
+        -- TODO: how many max response tokens?
         local MAX_RESPONSE_TOKENS = 512
 
         local full_prompt = prompt.predict_edit_prompt(request)
@@ -37,9 +37,14 @@ local openai_adapter = {
     ---@param response unknown
     ---@return zeta.PredictEditResponse
     adapt_predict_edit_response = function(response)
+        vim.validate("predict_edit_response", response, "table")
+        vim.validate("predict_edit_response.id", response.id, "string")
+        vim.validate("predict_edit_response.choices", response.choices, "table")
+        vim.validate("predict_edit_response.choices[1]", response.choices[1], "table")
+        vim.validate("predict_edit_response.choices[1].text", response.choices[1].text, "string")
+
         ---@type zeta.PredictEditResponse
         return {
-            -- TODO: validate response, could be dereferencing nil here
             output_excerpt = response.choices[1].text,
             request_id = response.id, -- TODO: is this the right id?
         }
