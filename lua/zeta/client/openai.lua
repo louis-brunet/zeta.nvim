@@ -12,7 +12,7 @@ local log = require('zeta.log')
 ---@field stop? string|string[]
 
 ---@type zeta.ClientAdapter
-local openai_adapter = {
+local M = {
     get_config = function()
         local config = require("zeta.config")
         ---@type zeta.ClientAdapterConfig
@@ -64,5 +64,4 @@ local openai_adapter = {
     end,
 }
 
-
-return openai_adapter
+return M

@@ -21,6 +21,10 @@ local M = {}
 local _MAX_EVENT_TOKENS = 500
 local MAX_CONTEXT_TOKENS = 150
 local MAX_REWRITE_TOKENS = 350
+
+-- TODO: refactor zeta marker constants with those from ./prompt.lua
+local EDITABLE_REGION_START_MARKER = "<|editable_region_start|>"
+local EDITABLE_REGION_END_MARKER = "<|editable_region_end|>"
 local CURSOR_MARKER = "<|user_cursor_is_here|>"
 
 function M.request_predict_completion()
@@ -52,17 +56,12 @@ function M.request_predict_completion()
             -- to enable this, request body should be ready on textchange even if
             -- previous request is still waiting
 
-            -- TODO: refactor constants with those from ./prompt.lua
-            local EDITABLE_REGION_START_MARKER = "<|editable_region_start|>"
-            local EDITABLE_REGION_END_MARKER = "<|editable_region_end|>"
-            -- local special_token_pattern = ("%s|%s|%s"):format(
-            --     vim.pesc(EDITABLE_REGION_START_MARKER),
-            --     vim.pesc(EDITABLE_REGION_END_MARKER),
-            --     vim.pesc(CURSOR_MARKER)
-            -- )
+            -- TODO: if the zed API returns the output_excerpt already
+            -- concatenated, then move these substitutions to the openai adapter
+            -- at ./client/openai.lua.
             local output_excerpt = res.output_excerpt
                 :gsub(vim.pesc(CURSOR_MARKER), "")
-                :gsub("^.*"..vim.pesc(EDITABLE_REGION_START_MARKER) .. "\n", "")
+                :gsub("^.*" .. vim.pesc(EDITABLE_REGION_START_MARKER) .. "\n", "")
                 :gsub(vim.pesc(EDITABLE_REGION_END_MARKER) .. "\n" .. ".*$", "")
             local edits = M.compute_line_edits(
                 table.concat(current_editable_lines, "\n") .. "\n",

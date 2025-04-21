@@ -8,7 +8,7 @@ M.PREVIEW_NS = vim.api.nvim_create_namespace("zeta.nvim")
 
 M.choice = {
     ACCEPT = 1, -- Yes
-    LAST = 2, -- Last
+    LAST = 2,   -- Last
     REJECT = 3, -- No
 }
 
