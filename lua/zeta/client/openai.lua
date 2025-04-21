@@ -1,6 +1,16 @@
 local prompt = require('zeta.prompt')
 local log = require('zeta.log')
 
+---See https://platform.openai.com/docs/api-reference/completions
+---@class zeta.OpenAiCompletionRequest
+---@field prompt string
+---@field model string
+---@field max_tokens? integer
+---@field temperature? float
+---@field top_p? float
+---@field stream? boolean
+---@field stop? string|string[]
+
 ---@type zeta.ClientAdapter
 local openai_adapter = {
     get_config = function()
@@ -14,21 +24,24 @@ local openai_adapter = {
     end,
 
     --- Adapt the edit prediction request for an OpenAI-compatible server
-    --- TODO: return type for OpenAI completion request
     ---
     ---@param request zeta.PredictEditRequestBody
+    ---@return zeta.OpenAiCompletionRequest
     adapt_predict_edit_request = function(request)
         -- TODO: how many max response tokens?
         local MAX_RESPONSE_TOKENS = 512
 
         local full_prompt = prompt.predict_edit_prompt(request)
         log.debug("created prompt:\n", full_prompt)
+
+        ---@type zeta.OpenAiCompletionRequest
         return {
             prompt = full_prompt,
             max_tokens = MAX_RESPONSE_TOKENS,
             temperature = 0.0,
+            top_p = 0.9,
             stream = false,
-            -- model = "some_model",
+            model = "some_model", -- seemingly not used by llama-server
             -- stop = EDITABLE_REGION_END_MARKER,
         }
     end,
