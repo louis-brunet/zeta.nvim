@@ -7,10 +7,12 @@ local M = {}
 ---@field prompt string
 ---@field speculated_output? string
 
-local CURSOR_MARKER = "<|user_cursor_is_here|>"
-local START_OF_FILE_MARKER = "<|start_of_file|>"
-local EDITABLE_REGION_START_MARKER = "<|editable_region_start|>"
-local EDITABLE_REGION_END_MARKER = "<|editable_region_end|>"
+M.markers =  {
+    CURSOR_MARKER = "<|user_cursor_is_here|>",
+    START_OF_FILE_MARKER = "<|start_of_file|>",
+    EDITABLE_REGION_START_MARKER = "<|editable_region_start|>",
+    EDITABLE_REGION_END_MARKER = "<|editable_region_end|>",
+}
 
 local function tokens_for_bytes(bytes)
     return bytes / 3
@@ -53,17 +55,17 @@ end
 ---@param end_ integer
 local function format_editable_lines(start, end_)
     local pos = vim.api.nvim_win_get_cursor(0)
-    local str = EDITABLE_REGION_START_MARKER .. "\n"
+    local str = M.markers.EDITABLE_REGION_START_MARKER .. "\n"
     vim.iter(getlines(start, pos[1] - 1)):map(function(line)
         str = str .. line .. "\n"
     end)
     str = str .. vim.fn.getline(pos[1]):sub(0, pos[2])
-    str = str .. CURSOR_MARKER
+    str = str .. M.markers.CURSOR_MARKER
     str = str .. vim.fn.getline(pos[1]):sub(pos[2] + 1) .. "\n"
     vim.iter(getlines(pos[1] + 1, end_)):map(function(line)
         str = str .. line .. "\n"
     end)
-    str = str .. EDITABLE_REGION_END_MARKER .. "\n"
+    str = str .. M.markers.EDITABLE_REGION_END_MARKER .. "\n"
     return str
 end
 
@@ -98,7 +100,7 @@ function M.excerpt_for_cursor_position(editable_token_limit, context_token_limit
     local path = utils.get_buf_rel_path(bufnr)
     local prompt = "```" .. path .. "\n"
     if ctx_lines_start == 1 then
-        prompt = prompt .. START_OF_FILE_MARKER .. "\n"
+        prompt = prompt .. M.markers.START_OF_FILE_MARKER .. "\n"
     end
     vim.iter(getlines(ctx_lines_start, eda_lines_start - 1)):map(function(line)
         prompt = prompt .. line .. "\n"
