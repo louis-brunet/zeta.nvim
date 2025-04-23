@@ -12,58 +12,20 @@ M.choice = {
     REJECT = 3, -- No
 }
 
----@param bufnr integer
----@param prediction zeta.Prediction
-function M.set_prediction(bufnr, prediction)
-    if bufnr == 0 then
-        bufnr = vim.api.nvim_get_current_buf()
-    end
-    local first_edit = prediction.edits[1]
-    if not first_edit then
-        log.debug("ignore prediction without any edits")
-        return
-    end
-    -- TODO: show indicator
-    state.buffers[bufnr].prediction = prediction
-    vim.api.nvim_buf_clear_namespace(bufnr, M.INDI_NS, 0, -1)
-    vim.api.nvim_buf_set_extmark(bufnr, M.INDI_NS, first_edit.range[1] - 1, 0, {
-        virt_text = {
-            { " Predicted Edit [Press gy to preview] " },
-        },
-        virt_text_pos = "right_align",
-    })
-end
-
----@param bufnr integer
-function M.clear_prediction(bufnr)
-    state.buffers[bufnr].prediction = nil
-    vim.api.nvim_buf_clear_namespace(bufnr, M.INDI_NS, 0, -1)
-end
-
----@param bufnr integer
----@param id integer
-function M.buf_hide_inelinediffs(bufnr, id)
-    vim.api.nvim_buf_del_extmark(bufnr, M.PREVIEW_NS, id)
-end
-
----@param bufnr integer
+---Get the 1-based line index where the cursor should be placed for this edit.
 ---@param edit zeta.LineEdit
-function M.apply_edit(bufnr, edit)
-    vim.api.nvim_buf_set_lines(bufnr, edit.range[1] - 1, edit.range[2], false, edit.value)
+---@return integer
+local function get_cursor_line_for_edit(edit)
+    return math.max(1, math.min(edit.range[1], edit.range[2]))
 end
 
 ---@param edit zeta.LineEdit
----@param bufnr? integer
----@param callback? fun(choice: integer)
--- TODO: use nvim-nio instead of callback hell
-function M.ask_for_edit(edit, bufnr, callback)
-    bufnr = bufnr or 0
-    local winid = vim.api.nvim_get_current_win()
-    log.debug("ask_for_edit range=", edit.range)
-    -- show inline diff
-
+---@param bufnr integer
+---@param winid integer
+---@return integer[] extmark_ids
+local function show_inline_diff(edit, bufnr, winid)
     ---1-based
-    local new_cursor_line = math.max(1, math.min(edit.range[1], edit.range[2]))
+    local new_cursor_line = get_cursor_line_for_edit(edit)
     ---@type integer[]
     local ext_ids = {
         vim.api.nvim_buf_set_extmark(bufnr, M.PREVIEW_NS, new_cursor_line - 1, 0, {
@@ -117,6 +79,7 @@ function M.ask_for_edit(edit, bufnr, callback)
     if diff_add_virt_lines_above and diff_add_ext_line == 0 then
         local scroll_up_count = #edit.value
         if scroll_up_count > 0 then
+            -- scroll up to show virtual lines above the first line
             vim.fn.winrestview({ topfill = scroll_up_count })
         end
     end
@@ -126,13 +89,66 @@ function M.ask_for_edit(edit, bufnr, callback)
         -- check ok and do something with it.
         log.debug("nvim__redraw failed")
     end
-    callback = callback or function() end
+
+    return ext_ids
+end
+
+---@param bufnr integer
+---@param prediction zeta.Prediction
+function M.set_prediction(bufnr, prediction)
+    if bufnr == 0 then
+        bufnr = vim.api.nvim_get_current_buf()
+    end
+    local first_edit = prediction.edits[1]
+    if not first_edit then
+        log.debug("ignore prediction without any edits")
+        return
+    end
+    local predicted_edit_line = get_cursor_line_for_edit(first_edit)
+    -- TODO: show indicator
+    state.buffers[bufnr].prediction = prediction
+    vim.api.nvim_buf_clear_namespace(bufnr, M.INDI_NS, 0, -1)
+    vim.api.nvim_buf_set_extmark(bufnr, M.INDI_NS, predicted_edit_line - 1, 0, {
+        virt_text = {
+            { " Predicted Edit [Press gy to preview] " },
+        },
+        virt_text_pos = "right_align",
+    })
+end
+
+---@param bufnr integer
+function M.clear_prediction(bufnr)
+    state.buffers[bufnr].prediction = nil
+    vim.api.nvim_buf_clear_namespace(bufnr, M.INDI_NS, 0, -1)
+end
+
+---@param bufnr integer
+---@param id integer
+function M.buf_hide_inelinediffs(bufnr, id)
+    vim.api.nvim_buf_del_extmark(bufnr, M.PREVIEW_NS, id)
+end
+
+---@param bufnr integer
+---@param edit zeta.LineEdit
+function M.apply_edit(bufnr, edit)
+    vim.api.nvim_buf_set_lines(bufnr, edit.range[1] - 1, edit.range[2], false, edit.value)
+end
+
+---@param edit zeta.LineEdit
+---@param bufnr? integer
+---@param on_choice_callback? fun(choice: integer)
+-- TODO: use nvim-nio instead of callback hell
+function M.ask_for_edit(edit, bufnr, on_choice_callback)
+    bufnr = bufnr or 0
+    local winid = vim.api.nvim_get_current_win()
+    local extmark_ids= show_inline_diff(edit, bufnr, winid)
+    on_choice_callback = on_choice_callback or function() end
     vim.schedule(function()
         local choice = vim.fn.confirm("Apply edit?", "&Yes\n&Last\n&No\n&Quit", 3, "Question")
-        vim.iter(ext_ids):map(function(id)
+        vim.iter(extmark_ids):map(function(id)
             M.buf_hide_inelinediffs(bufnr, id)
         end)
-        callback(choice)
+        on_choice_callback(choice)
     end)
 end
 
@@ -144,6 +160,7 @@ function M.preview_prediction(bufnr, prediction)
     assert(#prediction.edits > 0, "prediction needs to have at least 1 line edit")
     local edits = prediction.edits
     M.clear_prediction(bufnr)
+    ---@param edit zeta.LineEdit
     local function ask(edit)
         M.ask_for_edit(edit, bufnr, function(choice)
             vim.api.nvim_buf_clear_namespace(bufnr, M.INDI_NS, 0, -1)
