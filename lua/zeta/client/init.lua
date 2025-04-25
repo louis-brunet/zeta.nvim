@@ -51,10 +51,15 @@ function client.perform_predicted_edit(body, callback)
     local adapter_config = adapter.get_config()
     local api_url = adapter_config.url.predict_edit
     local json_body = vim.json.encode(adapter.adapt_predict_edit_request(body))
+    local state = require("zeta.state")
 
     log.debug(("POST %s %s"):format(api_url, json_body))
 
-    curl.post(api_url, {
+    -- cancel pending requests
+    -- TODO: disable this in config?
+    state:cancel_pending_requests()
+
+    local curl_job = curl.post(api_url, {
         body = json_body,
         headers = {
             ["Content-Type"] = "application/json",
@@ -62,21 +67,44 @@ function client.perform_predicted_edit(body, callback)
             ["Authorization"] = "Bearer " .. API_TOKEN,
         },
         callback = function(resp)
+            log.debug("response: ", vim.inspect(resp))
             if resp.status ~= 200 then
                 -- TODO: handle response error
-                local error_msg = ("POST %s %d %s"):format(api_url, resp.status, vim.inspect(resp))
-                log.debug(error_msg)
+                log.debug(("response error %d POST %s %s"):format(resp.status, api_url,
+                    vim.inspect(resp)))
                 -- error(error_msg)
                 return
             end
-            local _ok, resp_body = pcall(vim.json.decode, resp.body)
+            local decode_ok, resp_body = pcall(vim.json.decode, resp.body)
+            if not decode_ok then
+                -- TODO: handle decode error
+                log.debug("could not decode json body: " .. vim.inspect(resp_body))
+                return
+            end
             log.debug("response body:", resp_body)
-            -- TODO: validate resp_body signature
             local predict_response = adapter.adapt_predict_edit_response(resp_body)
             log.debug("response transformed:", predict_response)
             callback(predict_response)
         end,
+        ---@param error { message: string?, stderr: string?, exit: integer? }
+        on_error = function(error)
+            -- TODO: handle curl error
+            vim.schedule(function()
+                log.notify(("curl error for %s\nstderr: %s\nexit_code: %s"):format(
+                        api_url, error.stderr,
+                        vim.inspect(error.exit)
+                    ),
+                    vim.log.levels.ERROR
+                )
+            end)
+        end,
     })
+
+    state:push_pending_request(curl_job)
+
+    curl_job:add_on_exit_callback(function()
+        state:remove_pending_request(curl_job)
+    end)
 end
 
 return client
