@@ -18,6 +18,8 @@ local default_config = {
             -- url = "localhost:7000/predict_edits/v2"
         },
     },
+    ---@type boolean cancel pending requests when requesting a new prediction
+    cancel_pending_requests = true,
 }
 ---@comment default-config:end
 

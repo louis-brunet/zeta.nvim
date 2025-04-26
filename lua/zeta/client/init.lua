@@ -52,12 +52,14 @@ function client.perform_predicted_edit(body, callback)
     local api_url = adapter_config.url.predict_edit
     local json_body = vim.json.encode(adapter.adapt_predict_edit_request(body))
     local state = require("zeta.state")
+    local config = require("zeta.config")
 
     log.debug(("POST %s %s"):format(api_url, json_body))
 
-    -- cancel pending requests
-    -- TODO: disable this in config?
-    state:cancel_pending_requests()
+    if config.cancel_pending_requests then
+        -- cancel pending requests
+        state:cancel_pending_requests()
+    end
 
     local curl_job = curl.post(api_url, {
         body = json_body,
@@ -100,11 +102,13 @@ function client.perform_predicted_edit(body, callback)
         end,
     })
 
-    state:push_pending_request(curl_job)
+    if config.cancel_pending_requests then
+        state:push_pending_request(curl_job)
 
-    curl_job:add_on_exit_callback(function()
-        state:remove_pending_request(curl_job)
-    end)
+        curl_job:add_on_exit_callback(function()
+            state:remove_pending_request(curl_job)
+        end)
+    end
 end
 
 return client

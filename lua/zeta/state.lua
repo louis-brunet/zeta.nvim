@@ -31,8 +31,8 @@ end
 function state:cancel_pending_requests()
     log.debug("cancel_pending_requests")
     for _, request in ipairs(state.pending_requests) do
-        log.debug("cancelling request with PID " .. request.pid)
         if not request.is_shutdown then
+            log.debug("cancelling request with PID " .. request.pid)
             vim.uv.kill(request.pid, 'sigint')
         end
     end
