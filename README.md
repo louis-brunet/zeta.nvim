@@ -1,5 +1,12 @@
 # [WIP] zeta.nvim
 
+> [!NOTE]
+>
+> This repo is a fork of
+> [boltlessengineer/zeta.nvim](https://github.com/boltlessengineer/zeta.nvim).
+> Once the original maintainer is available, I will gladly contribute everything
+> back to the original repo.
+
 Neovim's implementation of [Zed]'s [edit prediction] feature.
 
 ## Installation
